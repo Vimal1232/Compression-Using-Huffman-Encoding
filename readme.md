@@ -20,7 +20,7 @@ String = "Once upon a time, in a small village nestled beside a sparkling river,
 
 Results:
 
-The String Size in bytes 297
-The Compressed Size in Bytes 157
-The Compression Ratio 1.89172
-Compressed By 47.138%
+- **The String Size in bytes**: 297
+- **The Compressed Size in Bytes**: 157
+- **The Compression Ratio**: 1.89172
+- **Compressed By**: 47.138%
