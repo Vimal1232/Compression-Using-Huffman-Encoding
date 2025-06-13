@@ -6,7 +6,7 @@ This repository contains a C++ implementation of Huffman coding, a popular algor
 
 - **Compression**: Efficiently compress Strings using Huffman coding.
 - **Binary Representation**: Store compressed data in a binary format for efficiency.
-- **Shannon entropy**: As Close a Shannon entropy as possible for the compressed data.
+- **Shannon entropy**: As Close a Shannon entropy Limit as possible for the compressed data.
 - **Decompression**: Implement functionality to decompress String back to their original form.
 
 ## Upcoming Features
