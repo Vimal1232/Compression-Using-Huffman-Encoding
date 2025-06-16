@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -62,30 +64,6 @@ void paths(Node *start, string Path, unordered_map<char, string> &pathMap)
     paths(start->right, Path + '1', pathMap);
 }
 
-void Decomp(Node *head, string encoding, int ptr, string &decompressed, Node *root)
-{
-    if (head == nullptr)
-    {
-        return;
-    }
-
-    if (head->ch != '\0')
-    {
-        char c = head->ch;
-        decompressed += c;
-        Decomp(root, encoding, ptr, decompressed, root);
-    }
-
-    if (encoding[ptr] == '0')
-    {
-        Decomp(head->left, encoding, ptr + 1, decompressed, root);
-    }
-
-    if (encoding[ptr] == '1')
-    {
-        Decomp(head->right, encoding, ptr + 1, decompressed, root);
-    }
-}
 
 pair<string, Node *> Encoding(string s)
 {
@@ -102,8 +80,6 @@ pair<string, Node *> Encoding(string s)
             freq[s[i]] = 1;
         }
     }
-
-    // Building Tree using Priority_queue(Minheap)
 
     priority_queue<Node *, vector<Node *>, Compare> minHeap;
 
@@ -132,8 +108,6 @@ pair<string, Node *> Encoding(string s)
         Node *n = new Node(dummy, Combination, left, right);
         minHeap.push(n);
     }
-
-    // Pathmapping and Encoding
 
     unordered_map<char, string> pathMap;
     string code;
@@ -198,16 +172,45 @@ void Decompression(string &decompressed, int ExtraBits, vector<uint8_t> &packedB
     {
         Recoding.erase(Recoding.size() - ExtraBits, ExtraBits);
     }
+    Node *current = root;
 
-    int stringpointer = 0;
+    for (char bit : Recoding)
+    {
+        if (bit == '0')
+        {
+            current = current->left;
+        }
+        if (bit == '1')
+        {
+            current = current->right;
+        }
 
-    Decomp(root, Recoding, stringpointer, decompressed, root);
+        if (!current)
+        {
+            cerr << "Traversal error: null node reached!" << endl;
+            return;
+        }
+
+        if(current ->ch != '\0'){
+            decompressed += current->ch;
+            current = root;
+        }
+    }
 }
 
 int main()
 {
+    ifstream file("Test.txt");
+    if (!file.is_open())
+    {
+        cerr << "Can't Open File" << endl;
+        return 0;
+    }
+    stringstream buffer;
+    buffer << file.rdbuf();
+    string s = buffer.str();
 
-    string s = "One day, a mighty lion was sleeping in the jungle when a little mouse accidentally ran across his paw. The lion woke up and caught the mouse, ready to eat it. The mouse pleaded, “Please, let me go, and someday I’ll repay your kindness.” The lion laughed but decided to let the mouse go. A few days later, the lion got caught in a hunter’s net. The mouse heard his roar, ran to him, and chewed through the ropes to free him. The lion was grateful and realized even small creatures can make a big difference.";
+    file.close();
 
     pair<string, Node *> result = Encoding(s);
     string encoding = result.first;
@@ -226,5 +229,5 @@ int main()
     float saved = (1.0f - (float)packedBytes.size() / s.size()) * 100;
     cout << "The Compression Ratio " << (float)s.size() / packedBytes.size() << endl;
     cout << "Compressed By " << saved << "%" << endl;
-    cout << "Decompressed Value " << decompressed << endl;
+    // cout << "Decompressed Value " << decompressed << endl;
 }
