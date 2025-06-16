@@ -87,11 +87,8 @@ void Decomp(Node *head, string encoding, int ptr, string &decompressed, Node *ro
     }
 }
 
-int main()
+pair<string, Node *> Encoding(string s)
 {
-    // Making Frequency Table
-    string s = "One day, a mighty lion was sleeping in the jungle when a little mouse accidentally ran across his paw. The lion woke up and caught the mouse, ready to eat it. The mouse pleaded, “Please, let me go, and someday I’ll repay your kindness.” The lion laughed but decided to let the mouse go. A few days later, the lion got caught in a hunter’s net. The mouse heard his roar, ran to him, and chewed through the ropes to free him. The lion was grateful and realized even small creatures can make a big difference.";
-
     unordered_map<char, int> freq;
 
     for (int i = 0; i < s.size(); i++)
@@ -152,10 +149,11 @@ int main()
             encoding += pathMap[s[i]];
         }
     }
+    return {encoding, root};
+}
 
-    // Binary Conversion
-
-    vector<uint8_t> packedBytes;
+int BinaryStoring(string encoding, vector<uint8_t> &packedBytes)
+{
     int i = 0;
 
     while (i + 8 <= encoding.size())
@@ -182,8 +180,11 @@ int main()
         packedBytes.push_back(packedbit);
     }
 
-    // Decompression
+    return ExtraBits;
+}
 
+void Decompression(string &decompressed, int ExtraBits, vector<uint8_t> &packedBytes, Node *root)
+{
     string Recoding;
 
     for (int i = 0; i < packedBytes.size(); i++)
@@ -198,10 +199,27 @@ int main()
         Recoding.erase(Recoding.size() - ExtraBits, ExtraBits);
     }
 
-    string decompressed = "";
-    int stringpointer;
+    int stringpointer = 0;
 
     Decomp(root, Recoding, stringpointer, decompressed, root);
+}
+
+int main()
+{
+
+    string s = "One day, a mighty lion was sleeping in the jungle when a little mouse accidentally ran across his paw. The lion woke up and caught the mouse, ready to eat it. The mouse pleaded, “Please, let me go, and someday I’ll repay your kindness.” The lion laughed but decided to let the mouse go. A few days later, the lion got caught in a hunter’s net. The mouse heard his roar, ran to him, and chewed through the ropes to free him. The lion was grateful and realized even small creatures can make a big difference.";
+
+    pair<string, Node *> result = Encoding(s);
+    string encoding = result.first;
+    Node *root = result.second;
+
+    vector<uint8_t> packedBytes;
+
+    int ExtraBits = BinaryStoring(encoding, packedBytes);
+
+    string decompressed = "";
+
+    Decompression(decompressed, ExtraBits, packedBytes, root);
 
     cout << "The String Size in bytes " << s.size() << endl;
     cout << "The Compressed Size in Bytes " << packedBytes.size() << endl;
