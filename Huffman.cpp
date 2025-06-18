@@ -4,6 +4,7 @@
 #include <queue>
 #include <fstream>
 #include <sstream>
+#include <tuple>
 
 using namespace std;
 
@@ -47,6 +48,19 @@ struct Compare
     }
 };
 
+struct Compare2
+{
+    bool operator()(pair<char, int> a, pair<char, int> b) const
+    {
+
+        if (a.second != b.second)
+        {
+            return a.second < b.second;
+        }
+        return a.first < b.first;
+    }
+};
+
 void paths(Node *start, string Path, unordered_map<char, string> &pathMap)
 {
     if (start == nullptr)
@@ -64,9 +78,9 @@ void paths(Node *start, string Path, unordered_map<char, string> &pathMap)
     paths(start->right, Path + '1', pathMap);
 }
 
-
-pair<string, Node *> Encoding(string s)
+void Encoding(string &s)
 {
+    vector<uint8_t> packedBytes;
     unordered_map<char, int> freq;
 
     for (int i = 0; i < s.size(); i++)
@@ -114,20 +128,49 @@ pair<string, Node *> Encoding(string s)
 
     paths(root, code, pathMap);
 
+    vector<pair<char, int>> Canonical;
+
+    for (auto codes : pathMap)
+    {
+        char first = codes.first;
+        string second = codes.second;
+
+        pair<char, int> par = {first, second.size()};
+
+        Canonical.push_back(par);
+    }
+
+    sort(Canonical.begin(), Canonical.end(), Compare2());
+
+    unordered_map<char, string> realCodes;
+    int NextCode = 0;
+    int currentLength = 0;
+
+    for (const auto &pair : Canonical)
+    {
+        char ch = pair.first;
+        int length = pair.second;
+
+        if (length > currentLength)
+        {
+            NextCode <<= (length - currentLength);
+            currentLength = length;
+        }
+        string code = bitset<32>(NextCode).to_string().substr(32 - length);
+        realCodes[ch] = code;
+        NextCode++;
+    }
+
     string encoding;
 
     for (int i = 0; i < s.size(); i++)
     {
-        if (pathMap.find(s[i]) != pathMap.end())
+        if (realCodes.find(s[i]) != realCodes.end())
         {
-            encoding += pathMap[s[i]];
+            encoding += realCodes[s[i]];
         }
     }
-    return {encoding, root};
-}
 
-int BinaryStoring(string encoding, vector<uint8_t> &packedBytes)
-{
     int i = 0;
 
     while (i + 8 <= encoding.size())
@@ -153,49 +196,112 @@ int BinaryStoring(string encoding, vector<uint8_t> &packedBytes)
         uint8_t packedbit = stoi(LastChunk, nullptr, 2);
         packedBytes.push_back(packedbit);
     }
+    ofstream outfile("compressed.txt", ios::binary);
 
-    return ExtraBits;
+    uint16_t charsize = Canonical.size();
+    outfile.write(reinterpret_cast<const char *>(&charsize), sizeof(charsize));
+
+    for (const auto &pair : Canonical)
+    {
+        char ch = pair.first;
+        uint8_t len = pair.second;
+
+        outfile.write(reinterpret_cast<const char *>(&ch), sizeof(ch));
+        outfile.write(reinterpret_cast<const char *>(&len), sizeof(len));
+    }
+
+    outfile.write(reinterpret_cast<const char *>(packedBytes.data()), packedBytes.size());
+    outfile.close();
+    cout << "file Compressed Successfully" << endl;
 }
 
-void Decompression(string &decompressed, int ExtraBits, vector<uint8_t> &packedBytes, Node *root)
+void Decompression()
 {
-    string Recoding;
+    ifstream infile("compressed.txt", ios::binary);
+
+    if (!infile)
+    {
+        cout << "Failed To open";
+    }
+
+    uint16_t charsize;
+    infile.read(reinterpret_cast<char *>(&charsize), sizeof(charsize));
+
+    vector<pair<char, uint8_t>> Canonical;
+
+    for (int i = 0; i < charsize; i++)
+    {
+        char ch;
+        uint8_t len;
+        infile.read(reinterpret_cast<char *>(&ch), sizeof(ch));
+        infile.read(reinterpret_cast<char *>(&len), sizeof(len));
+        Canonical.push_back({ch, len});
+    }
+
+    vector<uint8_t> packedBytes;
+
+    infile.seekg(0, ios::end);
+    streampos fileSize = infile.tellg();
+    streampos dataStart = 2 + charsize * 2;
+    infile.seekg(dataStart, ios::beg);
+
+    size_t dataSize = fileSize - dataStart;
+    packedBytes.resize(dataSize);
+
+    infile.read(reinterpret_cast<char *>(packedBytes.data()), dataSize);
+
+    infile.close();
+
+    unordered_map<char, string> realCodes;
+    int NextCode = 0;
+    int currentLength = 0;
+
+    for (const auto &pair : Canonical)
+    {
+        char ch = pair.first;
+        int length = pair.second;
+
+        if (length > currentLength)
+        {
+            NextCode <<= (length - currentLength);
+            currentLength = length;
+        }
+        string code = bitset<32>(NextCode).to_string().substr(32 - length);
+        realCodes[ch] = code;
+        NextCode++;
+    }
+
+    string recoding;
 
     for (int i = 0; i < packedBytes.size(); i++)
     {
         bitset<8> chunk(packedBytes[i]);
-
-        Recoding += chunk.to_string();
+        recoding += chunk.to_string();
     }
+    unordered_map<string, char> reverseCodesWithChar;
 
-    if (ExtraBits != 0)
+    for (auto pair : realCodes)
     {
-        Recoding.erase(Recoding.size() - ExtraBits, ExtraBits);
+        reverseCodesWithChar[pair.second] = pair.first;
     }
-    Node *current = root;
 
-    for (char bit : Recoding)
+    string temp;
+    string Decompressed;
+
+    for (int i = 0; i < recoding.size(); i++)
     {
-        if (bit == '0')
-        {
-            current = current->left;
-        }
-        if (bit == '1')
-        {
-            current = current->right;
-        }
+        temp += recoding[i];
 
-        if (!current)
+        if (reverseCodesWithChar.find(temp) != reverseCodesWithChar.end())
         {
-            cerr << "Traversal error: null node reached!" << endl;
-            return;
-        }
-
-        if(current ->ch != '\0'){
-            decompressed += current->ch;
-            current = root;
+            Decompressed += reverseCodesWithChar[temp];
+            temp = "";
         }
     }
+
+    ofstream outfile("decompressed.txt");
+
+    outfile.write(Decompressed.c_str(), Decompressed.size());
 }
 
 int main()
@@ -209,25 +315,8 @@ int main()
     stringstream buffer;
     buffer << file.rdbuf();
     string s = buffer.str();
-
     file.close();
 
-    pair<string, Node *> result = Encoding(s);
-    string encoding = result.first;
-    Node *root = result.second;
-
-    vector<uint8_t> packedBytes;
-
-    int ExtraBits = BinaryStoring(encoding, packedBytes);
-
-    string decompressed = "";
-
-    Decompression(decompressed, ExtraBits, packedBytes, root);
-
-    cout << "The String Size in bytes " << s.size() << endl;
-    cout << "The Compressed Size in Bytes " << packedBytes.size() << endl;
-    float saved = (1.0f - (float)packedBytes.size() / s.size()) * 100;
-    cout << "The Compression Ratio " << (float)s.size() / packedBytes.size() << endl;
-    cout << "Compressed By " << saved << "%" << endl;
-    // cout << "Decompressed Value " << decompressed << endl;
+    Encoding(s);
+    Decompression();
 }
