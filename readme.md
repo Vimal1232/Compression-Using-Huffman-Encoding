@@ -19,7 +19,7 @@ This repository contains a C++ implementation of Huffman coding, a popular algor
 
 ## Results
 
-- **Refer to the Test.cpp file for Data That Was Used**
+- **Refer to the Test.txt file for Data That Was Used**
 - **Original File Size**: 51kb
 - **Compressed File Size**: 28kb
 - **Compressed By**: 45.1%
