@@ -17,15 +17,27 @@ This repository contains a C++ implementation of Huffman coding, a popular algor
 
 - **Images Support**: Extend the algorithm to handle image files for compression.
 
-## Results
+### 📦 Huffman Compression Results (Large Text File)
 
 - **Refer to the Test.txt file for Data That Was Used**
-- **Original File Size**: 51kb
-- **Compressed File Size**: 28kb
-- **Compressed By**: 45.1%
-- **Shannon Entropy**: 4.318 bits per character
-- **Average Bits Per Character**: 4.459 bits per character
-- **Compression Efficiency**: 96.83% 
+- **Original File Size**: 3.3 MB
+- **Compressed File Size**: 1.8 MB
+- **Compressed By**: 43.06%
+- **Shannon Entropy**: 4.302 bits per character
+- **Average Bits Per Character**: 4.55 bits per character
+- **Compression Efficiency**: 94.5%
+
+### 📈 Summary Comparison
+
+| Metric                     | Huffman       | Gzip          |
+|---------------------------|---------------|---------------|
+| File Size (Compressed)    | 1.8 MB        | 1.2 MB        |
+| Compression Ratio         | 1.76          | 2.75          |
+| Compressed By             | 43.06%        | 64%           |
+| Decompression Accuracy    | ✅ Yes        | ✅ Yes        |
+
+---
+
 
 
 

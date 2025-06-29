@@ -95,6 +95,12 @@ void Encoding(string &s)
         }
     }
 
+    for(auto freqe : freq){
+        cout<<freqe.first << " " << freqe.second << endl;
+    }
+
+
+
     priority_queue<Node *, vector<Node *>, Compare> minHeap;
 
     for (auto i : freq)
