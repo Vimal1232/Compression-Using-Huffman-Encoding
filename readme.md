@@ -25,7 +25,6 @@ This repository contains a C++ implementation of Huffman coding, a popular algor
 - **Compressed By**: 43.06%
 - **Shannon Entropy**: 4.302 bits per character
 - **Average Bits Per Character**: 4.55 bits per character
-- **Compression Efficiency**: 94.5%
 
 ### 📈 Summary Comparison
 
